@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <fstream>
+#include "BasicPoly.hpp"
+#include "rings/ringelem.hpp"
 
 std::string readEntireFile(const std::string &fileName)
 {
@@ -20,9 +22,8 @@ std::string readEntireFile(const std::string &fileName)
 std::string_view next_line(std::string_view& str)
 // modifies str (removes first line and \n\r chars), and returns first line as a string
 {
-  long last = -1;
-  long i = 0;
-  for (; i < str.size(); ++i)
+  long last = str.size();
+  for (long i = 0; i < str.size(); ++i)
     {
       char c = str[i];
       if (c == '\r' or c == '\n')
@@ -32,29 +33,62 @@ std::string_view next_line(std::string_view& str)
         }
     }
   std::string_view result = str.substr(0, last);
-  str = str.substr(last+1);
+  // The last line in Msolve need not have a trailing newline.
+  // We check for that here.
+  if (last == str.size()) {
+    str = {};
+  }
+  else {
+    str = str.substr(last+1);
+  } 
   return result;
 }
-
 
 // TODO: check for overflow
 // TODO: make a readCoefficient function
 //  it should be able to read arbitrary precision ints too...
 //  also maybe a set of variables for the coefficient ring
 //  and allow e.g.: (3*a+2)*x^2*y^3
-long readInteger(const std::string_view& str, size_t& begin_loc, size_t end_loc)
+long readInteger_long(const std::string_view& str, size_t& begin_loc, size_t end_loc)
 {
   // if str[0] is a digit, find the value, and increment str past the number.
   // if it is not: return 1, leave str unchanged.
-  if (not isdigit(str[begin_loc])) return 1;
+  if (not isdigit(str[begin_loc])) {
+      return 1;
+  }
   long result = 0;
   size_t loc = begin_loc;
   while (loc < end_loc and isdigit(str[loc]))
     {
-      result = 10 * result + (str[loc] - '0');
+      int digit = str[loc] - '0';
+
+      // check for overflow
+      if (result > (LONG_MAX - digit) / 10)
+      {
+          throw parsing_error("integer overflow at position " + std::to_string(loc));
+      }
+      result = 10 * result + digit;
       loc++;
     }
 
+  begin_loc = loc;
+  return result;
+}
+
+mpz_class readInteger_mpz_class(const std::string_view& str, size_t& begin_loc, size_t end_loc)
+{
+  // if str[0] is a digit, find the value, and increment str past the number.
+  // if it is not: return 1, leave str unchanged.
+  mpz_class result;
+  if (not isdigit(str[begin_loc])) return result = 1;
+  result = 0;
+  size_t loc = begin_loc;
+  while (loc < end_loc and isdigit(str[loc]))
+    {
+      result *= 10;
+      result += str[loc] - '0';
+      loc++;
+    }
   begin_loc = loc;
   return result;
 }
@@ -94,6 +128,17 @@ std::vector<std::string> readIdentifierList(const std::string_view line)
   return result;
 }
 
+void skipWhitespace(const std::string_view& str,
+                    size_t& begin_loc,
+                    size_t end_loc)
+{
+    while (begin_loc < end_loc &&
+           std::isspace(static_cast<unsigned char>(str[begin_loc])))
+    {
+        ++begin_loc;
+    }
+}
+
 // This function reads in a polynomial with (signed?) integer coefficients (but limited to size 2^31-1)
 // A parse error results in a thrown error with an indication of the error (and which line, character in the string).
 // TODO: throwing the error: not done
@@ -105,9 +150,8 @@ void parseBasicPoly(const std::string_view& str, const IdentifierHash& idenHash,
   size_t begin_loc = 0;
   size_t end_loc = str.size();
 
-  result.mCoefficients.clear();
-  result.mMonomials.clear();
-
+  result.clear();
+  
   if (end_loc > begin_loc and str[begin_loc] == '[')
     {
       ++begin_loc;
@@ -121,23 +165,28 @@ void parseBasicPoly(const std::string_view& str, const IdentifierHash& idenHash,
 
   while (end_loc > begin_loc)
     {
+      // advance past leading whitespace
+      skipWhitespace(str, begin_loc, end_loc);
       int sign = 1;
-
       // Read the next term into `result`.
       if (str[begin_loc] == '+')
         {
           ++begin_loc;
+          if (str[begin_loc] == '-') {
+            // we don't allow "+- ..."
+            throw parsing_error("encountered illegal term starting with '+-' at " + std::to_string(begin_loc -1));
+          }
         }
-      // TODO: do not want +- ...
       if (str[begin_loc] == '-')
         {
           ++begin_loc;
           sign = -1;
         }
-      long coeff = readInteger(str, begin_loc, end_loc); // defaults to 1 if no integer present.
+      skipWhitespace(str, begin_loc, end_loc);
+      mpz_class coeff{readInteger_mpz_class(str, begin_loc, end_loc)}; // defaults to 1 if no integer present.
 
       if (sign == -1) coeff = -coeff;
-      result.mCoefficients.push_back(coeff);
+      result.mCoefficients.push_back(coeff); // do not clear(coeff) !
 
       // Now we read the monomial part.
       long loc = result.mMonomials.size(); // this is where the length field will go.
@@ -148,6 +197,8 @@ void parseBasicPoly(const std::string_view& str, const IdentifierHash& idenHash,
       // If we get to "+", or "-" or end of string: we set result.mMonomials[loc] to the correct size.
       while (end_loc > begin_loc)
         {
+          // advance past leading whitespace
+          skipWhitespace(str, begin_loc, end_loc);
           char c = str[begin_loc];
           if (c == '-' or c == '+')
             break; // on to the next term
@@ -180,11 +231,17 @@ void parseBasicPoly(const std::string_view& str, const IdentifierHash& idenHash,
             {
               ++begin_loc;
               // if not a digit, throw an error.  Note: here we are currently assuming positive exponents.
-              if (begin_loc >= end_loc or not std::isdigit(str[begin_loc]))
-                {
-                  throw parsing_error("expected a digit at position " + std::to_string(begin_loc));
-                }
-              e = readInteger(str, begin_loc, end_loc);
+              if (begin_loc >= end_loc) {
+                throw parsing_error("expected a digit at position " + std::to_string(begin_loc) + " but found nothing");
+              }
+              if (str[begin_loc] == '-') {
+                throw parsing_error("negative exponents are not supported");
+              }
+              if (not std::isdigit(str[begin_loc]))
+              {
+                throw parsing_error("expected a digit at position " + std::to_string(begin_loc));
+              }
+              e = readInteger_long(str, begin_loc, end_loc);
             }
           // if exponent is zero, don't add anything to monomial.
           if (e != 0)
@@ -199,7 +256,7 @@ void parseBasicPoly(const std::string_view& str, const IdentifierHash& idenHash,
 
 BasicPoly parseBasicPoly(std::string poly, std::vector<std::string> varnames)
 {
-  std::string_view str { poly};
+  std::string_view str {poly};
   IdentifierHash idenMap {varnames};
   BasicPoly result;
   parseBasicPoly(str, idenMap, result);

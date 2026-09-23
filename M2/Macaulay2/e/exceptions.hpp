@@ -1,5 +1,5 @@
-#ifndef _exceptions_h_
-#define _exceptions_h_
+#ifndef M2_EXCEPTIONS_HH_
+#define M2_EXCEPTIONS_HH_
 
 #include <stdexcept>
 #include <string>
@@ -16,7 +16,7 @@ struct overflow_exception : public engine_error
 struct division_by_zero_error : public engine_error
 {
   explicit division_by_zero_error(const std::string &msg) : engine_error(msg) {}
-  explicit division_by_zero_error() : engine_error(std::string{"atttempt to divide by zero"}) {}
+  explicit division_by_zero_error() : engine_error(std::string{"division by zero"}) {}
 };
 struct internal_error : public engine_error
 {

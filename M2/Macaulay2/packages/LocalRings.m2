@@ -36,7 +36,7 @@ newPackage(
         },
     Headline => "operations over a local ring R_p",
     Keywords => {"Commutative Algebra"},
-    PackageExports => {"PruneComplex", "Saturation"},
+    PackageExports => {"Saturation", "Complexes"},
     AuxiliaryFiles => true
     )
 
@@ -62,7 +62,6 @@ export {
     "residueMap", -- not documented
     "maxIdeal" -- not documented
     }
-
 -- << "--------------------------------------------------------------------------------------" << endl;
 -- << "-- The LocalRings package is experimental, but old methods are still available.     --" << endl;
 -- << "-- See the documentation and comments in the package to learn more.                 --" << endl;
@@ -323,11 +322,11 @@ hilbertSamuelFunction (Ideal, Module, ZZ, ZZ) := List => (q, M, n0, n1) -> (
 --===================================== addHooks Section =====================================--
 
 -- res, resolution
-addHook((resolution, Module), Strategy => Local, (opts, M) -> (
+addHook((freeResolution, Module), Strategy => Local, (opts, M) -> (
         RP := ring M;
         if instance(RP, LocalRing) then (
             M' := liftUp M;
-            C := resolution(M', opts);
+            C := freeResolution(M', opts);
             CP := C ** RP;
             CP = if isHomogeneous M'
               then pruneComplex(CP, UnitTest => isScalar, PruningMap => false)
@@ -504,7 +503,13 @@ beginDocumentation()
 load ("./LocalRings/doc.m2")
 
 end--
-
+restart
+load "LocalRings.m2"
+uninstallPackage"LocalRings"
+restart
+installPackage"LocalRings"
+check "LocalRings"
+viewHelp LocalRings
 --==================================== Under Development ====================================--
 --TODO: implement a prime filtration
 

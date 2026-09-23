@@ -1,11 +1,13 @@
 // Copyright 2014-2016  Michael E. Stillman
-#pragma once
+#ifndef M2_UTIL_HPP
+#define M2_UTIL_HPP
 
-#include <string>  // for string, basic_string
-#include <vector>  // for vector
+#include <string>   // for string, basic_string
+#include <vector>   // for vector
+#include <iostream> // for ostream
 
-#include "M2mem.h"              // for getmemarraytype
-#include "engine-includes.hpp"  // for M2_* types
+#include "interface/m2-mem.h"              // for getmemarraytype
+#include "interface/m2-types.h"  // for M2_* types
 
 /**
  * Utilities for converting between M2 types and standard C++ types
@@ -74,6 +76,17 @@ inline std::vector<T> M2_arrayint_to_stdvector(M2_arrayint arr)
   return result;
 }
 
+template <typename T>
+inline std::ostream& operator<<(std::ostream& o, const std::vector<T>& ts)
+{
+  o << "[";
+  for (auto a : ts)
+    o << a << " ";
+  o << "]";
+  return o;
+}
+
+#endif
 // Local Variables:
 // compile-command: "make -C $M2BUILDDIR/Macaulay2/e "
 // indent-tabs-mode: nil

@@ -1,8 +1,9 @@
-#pragma once
+#ifndef M2_GB_F4_SPAIRS_HPP
+#define M2_GB_F4_SPAIRS_HPP
 
-#include "MonomialTypes.hpp"
-#include "MonomialView.hpp"
-#include "Basis.hpp"
+#include "gb-f4/MonomialTypes.hpp"
+#include "gb-f4/MonomialView.hpp"
+#include "gb-f4/Basis.hpp"
 
 #include <map>
 
@@ -17,7 +18,7 @@
 //   insert each spair directly.
 //   
 // Grabbing a set of spairs to do (but if interrupted, don't lose the pairs!)
-//   sort them? at leat by degree...
+//   sort them? at least by degree...
 //   how to remove a pair that isn't required? (the more complicated spair approach).
 
 // Maybe what I should do before meeting Frank:
@@ -90,6 +91,7 @@ class SPairSet
 
 } // end namespace newf4
 
+#endif
 // Local Variables:
 // compile-command: "make -C $M2BUILDDIR/Macaulay2/e "
 // indent-tabs-mode: nil

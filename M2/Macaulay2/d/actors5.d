@@ -143,6 +143,9 @@ setup(PercentS,modC);
 AtAtfun(lhs:Code,rhs:Code):Expr := binarymethod(lhs,rhs,AtAtS);
 setup(AtAtS,AtAtfun);
 
+AtAtQuestionfun(lhs:Code,rhs:Code):Expr := binarymethod(lhs,rhs,AtAtQuestionS);
+setup(AtAtQuestionS,AtAtQuestionfun);
+
 StarStarfun(lhs:Code,rhs:Code):Expr := binarymethod(lhs,rhs,StarStarS);
 setup(StarStarS,StarStarfun);
 
@@ -198,38 +201,48 @@ setup(AmpersandS,ampersandfun);
 hathatfun(lhs:Code,rhs:Code):Expr := binarymethod(lhs,rhs,HatHatS);
 setup(HatHatS,hathatfun);
 
-Tildefun(rhs:Code):Expr := unarymethod(rhs,TildeS);
-setuppostfix(TildeS,Tildefun);
+interpunctfun(lhs:Code, rhs:Code):Expr := binarymethod(lhs, rhs, InterpunctS);
+setup(InterpunctS, interpunctfun);
+
+boxtimesfun(lhs:Code, rhs:Code):Expr := binarymethod(lhs, rhs, BoxTimesS);
+setup(BoxTimesS, boxtimesfun);
+
+shuffleproductfun(lhs:Code, rhs:Code):Expr := binarymethod(lhs, rhs, ShuffleProductS);
+setup(ShuffleProductS, shuffleproductfun);
+
+Tildefun2(lhs:Code,rhs:Code):Expr := binarymethod(lhs,rhs,TildeS);
+Tildefun1(rhs:Code):Expr := unarymethod(rhs,TildeS);
+setup(TildeS,Tildefun1,Tildefun2);
 
 PowerTildefun(rhs:Code):Expr := unarymethod(rhs,PowerTildeS);
-setuppostfix(PowerTildeS,PowerTildefun);
+setupop(PowerTildeS,PowerTildefun);
 
 UnderscoreTildefun(rhs:Code):Expr := unarymethod(rhs,UnderscoreTildeS);
-setuppostfix(UnderscoreTildeS,UnderscoreTildefun);
+setupop(UnderscoreTildeS,UnderscoreTildefun);
 
 ParenStarParenfun(rhs:Code):Expr := unarymethod(rhs,ParenStarParenS);
-setuppostfix(ParenStarParenS,ParenStarParenfun);
+setupop(ParenStarParenS,ParenStarParenfun);
 
 UnderscoreStarfun(rhs:Code):Expr := unarymethod(rhs,UnderscoreStarS);
-setuppostfix(UnderscoreStarS,UnderscoreStarfun);
+setupop(UnderscoreStarS,UnderscoreStarfun);
 
 PowerStarfun(rhs:Code):Expr := unarymethod(rhs,PowerStarS);
-setuppostfix(PowerStarS,PowerStarfun);
+setupop(PowerStarS,PowerStarfun);
 
 --PowerSharpfun(rhs:Code):Expr := unarymethod(rhs,PowerSharpS);
---setuppostfix(PowerSharpS,PowerSharpfun);
+--setupop(PowerSharpS,PowerSharpfun);
 
 --UnderscoreSharpfun(rhs:Code):Expr := unarymethod(rhs,UnderscoreSharpS);
---setuppostfix(UnderscoreSharpS,UnderscoreSharpfun);
+--setupop(UnderscoreSharpS,UnderscoreSharpfun);
 
 Exclamationfun(rhs:Code):Expr := unarymethod(rhs,ExclamationS);
-setuppostfix(ExclamationS,Exclamationfun);
+setupop(ExclamationS,Exclamationfun);
 
 PowerExclamationfun(rhs:Code):Expr := unarymethod(rhs,PowerExclamationS);
-setuppostfix(PowerExclamationS,PowerExclamationfun);
+setupop(PowerExclamationS,PowerExclamationfun);
 
 UnderscoreExclamationfun(rhs:Code):Expr := unarymethod(rhs,UnderscoreExclamationS);
-setuppostfix(UnderscoreExclamationS,UnderscoreExclamationfun);
+setupop(UnderscoreExclamationS,UnderscoreExclamationfun);
 
 factorial(x:Expr):Expr := (
      when x
@@ -1324,6 +1337,7 @@ setupfun("readlink",readlinkfun);
 
 realpathfun(e:Expr):Expr := (
      when e is f:stringCell do (
+	  if f.v === "stdio" || f.v === "currentString" then return e;
      	  when realpath(expandFileName(f.v))
      	  is null do buildErrorPacket(syscallErrorMessage("realpath"))
      	  is p:string do toExpr(p)
@@ -1399,6 +1413,8 @@ isDirectory(e:Expr):Expr := (
 	  filename := filename0.v;
 	  filename = expandFileName(filename);
 	  if !fileExists(filename) then return False;
+	  if filename.(length(filename) - 1) != '/'
+	  then filename = filename + "/";
 	  r := isDirectory(filename);
 	  if r == -1 then buildErrorPacket("can't see file '" + filename + "' : " + syserrmsg())
 	  else if r == 1 then True else False)
@@ -1578,23 +1594,24 @@ fillnodes(n:LexNode):void := (
 fillnodes(baseLexNode);
 setupconst("operatorNames",Expr(operatorNames));
 
+createSymbol(w:Word, d:Dictionary, s:string):Expr := (
+    if !isvalidsymbol(s) then buildErrorPacket("invalid symbol")
+    else if d.Protected then (
+	buildErrorPacket("attempted to create symbol in protected dictionary"))
+    else (
+	t := makeSymbol(w, tempPosition, d);
+	globalFrame.values.(t.frameindex)));
+
 getglobalsym(d:Dictionary,s:string):Expr := (
      w := makeUniqueWord(s,parseWORD);
      when lookup(w,d.symboltable) is x:Symbol do Expr(SymbolClosure(globalFrame,x))
-     is null do (
-          if !isvalidsymbol(s) then return buildErrorPacket("invalid symbol");
-	  if d.Protected then return buildErrorPacket("attempted to create symbol in protected dictionary");
-	  t := makeSymbol(w,tempPosition,d);
-	  globalFrame.values.(t.frameindex)));
+     is null do createSymbol(w, d, s));
 
 getglobalsym(s:string):Expr := (
      w := makeUniqueWord(s,parseWORD);
      when globalLookup(w)
      is x:Symbol do Expr(SymbolClosure(if x.thread then threadFrame else globalFrame,x))
-     is null do (
-	  if globalDictionary.Protected then return buildErrorPacket("attempted to create symbol in protected dictionary");
-	  t := makeSymbol(w,tempPosition,globalDictionary);
-	  globalFrame.values.(t.frameindex)));
+     is null do createSymbol(w, globalDictionary, s));
 
 getGlobalSymbol(e:Expr):Expr := (
      when e 
@@ -1741,8 +1758,10 @@ storeInHashTable(
      Expr(newCompiledFunction(storeGlobalDictionaries)));
 
 getcwdfun(e:Expr):Expr := (				    -- this has to be a function, because getcwd may fail
-     when e is s:Sequence do
-     if length(s) == 0 then cwd() else WrongNumArgs(0)
+    when e is s:Sequence do if length(s) != 0 then WrongNumArgs(0) else (
+	dir := getcwd();
+	if dir != "" then Expr(stringCell(dir))
+	else buildErrorPacket("can't get current working directory: " + syserrmsg()))
      else WrongNumArgs(0));
 setupfun("currentDirectory",getcwdfun);
 
@@ -1984,7 +2003,7 @@ setupconst("fileDictionaries",Expr(fileDictionaries));
 
 export newStaticLocalDictionaryClosure(filename:string):DictionaryClosure := (
      d := newStaticLocalDictionaryClosure();
-     storeInHashTable(fileDictionaries,toExpr(filename),Expr(d));
+     storeInHashTable(fileDictionaries,toExpr(relativizeFilename(filename)),Expr(d));
      d);
 
 fileMode(e:Expr):Expr := (
@@ -2097,7 +2116,8 @@ toExternalString(e:Expr):Expr := (
 setupfun("toExternalString0",toExternalString);
 
 header "
-#ifndef GC_get_full_gc_total_time /* added in bdwgc 8 */
+/* added in bdwgc 8 */
+#if GC_VERSION_MAJOR < 8
 unsigned long GC_get_full_gc_total_time(void) {return 0;}
 #endif
 #define DEF_GC_FN0(s)	static void * s##_0(void *client_data) { (void) client_data; return (void *) (long) s(); }

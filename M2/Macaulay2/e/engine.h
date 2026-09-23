@@ -1,7 +1,7 @@
 /* Copyright 2002 by Michael E. Stillman */
 
-#ifndef _engine_h_
-#define _engine_h_
+#ifndef M2_ENGINE_H_
+#define M2_ENGINE_H_
 
 /**
    \mainpage Hi, this is my main documentation page.
@@ -117,100 +117,6 @@ extern "C" {
   void rawShowComputation(const Computation *C); /* Dan: connected to rawShowComputation */
 
   /*******************************************
-   * Computation routines for Groebner bases *
-   *******************************************/
-
-  /* 
-     routine to compute a Groebner basis of an ideal in a polynomial ring
-     over a finite prime field.  Interfaces to mathicgb.
-     reducer: 0 is ClassicReducer, 1 is MatrixReducer
-   */
-  const Matrix* /* or null */ rawMGB(const Matrix* input, 
-                                     int reducer,
-                                     int spairGroupSize,
-                                     int nthreads,
-                                     const M2_string logging
-                                     ); /* connected: rawMGB */
-
-  Computation /* or null */ *IM2_GB_make(const Matrix *m,
-                                 M2_bool collect_syz,
-                                 int n_rows_to_keep,
-                                 M2_arrayint gb_weights,
-                                 M2_bool use_max_degree,
-                                 int max_degree,
-                                 int algorithm,
-                                 int strategy,
-                                 int max_reduction_count); /* drg: connected rawGB */
-
-  Computation /* or null */ *IM2_GB_force(const Matrix *m,
-                                  const Matrix *gb,
-                                  const Matrix *change,
-                                  const Matrix *syz); /* drg: connected rawGBForce */
-
-  Computation /* or null */ *rawMarkedGB(const Matrix *leadterms,
-                                 const Matrix *m,
-                                 const Matrix *gb,
-                                 const Matrix *change,
-                                 const Matrix *syz); /* mes: connected rawMarkedGB */
-
-  Computation /* or null */ *rawGroebnerWalk(const Matrix *gb,
-                                     const MonomialOrdering *order1);
-  /* Create a GB algorithm which will compute using the generic Groebner walk algorithm
-     Input: gb: a matrix which, under order1, would be a Groebner basis, except that
-                'gb' is a matrix over a polynomial ring whose order is 'order2'.
-            order1: a monomial ordering
-     Output: a Groebner basis computation object which will compute a GB of gb wrt
-            order2, using the Geneeric Groebner Walk algorithm of ...
-     Assumptions: the base ring is a polynomial ring over a field, with NO quotient elements
-  */
-
-  Computation /* or null */ *IM2_GB_set_hilbert_function(Computation *G,
-                                                 const RingElement *h); /* drg: connected rawGBSetHilbertFunction */
-
-
-  const Matrix /* or null */ *rawGBGetMatrix(Computation *C);
-  /* Get the minimal, auto-reduced GB of a GB computation.
-     Each call to this may produce a different raw matrix */
-
-  const Matrix /* or null */ *rawGBGetLeadTerms(Computation *G, int nparts);
-
-  const Matrix /* or null */ *rawGBGetParallelLeadTerms(Computation *C, M2_arrayint w);
-
-  const Matrix /* or null */ *rawGBMinimalGenerators(Computation *C);
-  /* Yields a matrix whose columns form a minimal generating set
-     for the ideal or submodule, as computed so far.  In the
-     inhomogeneous case, this yields a generating set which is
-     sometimes smaller than the entire Groebner basis. */
-
-  const Matrix /* or null */ *rawGBChangeOfBasis(Computation *C);
-  /* Yields the change of basis matrix from the Groebner basis to
-     the original generators, at least if n_rows_to_keep was set
-     when creating the GB computation.  This matrix, after the
-     computation has run to completion, should satisfy:
-     (original matrix) = (GB matrix) * (change of basis matrix). */
-
-  const Matrix /* or null */ *rawGBSyzygies(Computation *C);
-  /* Yields a matrix containing the syzygies computed so far
-     via the GB computation C, assuming that 'collect_syz' was
-     set when the computation was created.  If 'n_rows_to_keep' was
-     set to a non-negative integer, then only that many rows of each
-     syzygy are kept. */
-
-  const Matrix /* or null */ *rawGBMatrixRemainder(Computation *G,
-                                           const Matrix *m); /* drg: connected rawGBMatrixRemainder */
-
-  M2_bool IM2_GB_matrix_lift(Computation *G,
-                          const Matrix *m,
-                          const Matrix /* or null */ **result_remainder,
-                          const Matrix /* or null */ **result_quotient
-                          ); /* drg: connected rawGBMatrixLift */
-  /* false is returned if there is an error or if the remainder is NON-zero */
-
-  int IM2_GB_contains(Computation *G,
-                      const Matrix *m); /* drg: connected rawGBContains */
-
-
-  /*******************************************
    * Computation routines for Resolutions ****
    *******************************************/
 
@@ -304,20 +210,6 @@ extern "C" {
    generated by the monomials m_i, and each entry of M and the corresponding entry of the
    result differ by an element of the subalgebra generated by the f_i.
    */
-
-  M2_bool rawIdealOfPoints(const Ring *R,
-                      const MutableMatrix *Pts,
-                      Matrix /* or null */ ** result_GB,
-                      Matrix /* or null */ ** result_std_monoms);
-  /* Returns false if an error occurred.
-     Input: R: a polynomial ring of the form K[x1,...,xn]
-            Pts: an n by d matrix over K.
-     Action: Compute the ideal of the points in n-space
-             given by the columns of 'Pts'
-     Output: result_GB: the GB of this ideal
-             result_std_monoms: the standard monomials (1 by d matrix)
-     Question: should this return the separators as well?
-  */
 
   const Matrix /* or null */ *rawGbBoolean(const Matrix *m);
   const Matrix /* or null */ *rawBIBasis(const Matrix* m, int toGroebner);

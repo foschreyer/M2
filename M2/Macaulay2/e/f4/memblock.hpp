@@ -1,6 +1,6 @@
 // Copyright 2004 Michael E. Stillman
-#ifndef __memblock_h_
-#define __memblock_h_
+#ifndef M2_F4__MEMBLOCK_H_
+#define M2_F4__MEMBLOCK_H_
 
 #include "newdelete.hpp"
 
@@ -71,7 +71,7 @@ template <typename T, long int NSLAB>
 typename F4MemoryBlock<T, NSLAB>::slab *F4MemoryBlock<T, NSLAB>::new_slab()
 {
   slab *result = new slab;
-  result->next = 0;
+  result->next = nullptr;
   return result;
 }
 
@@ -87,9 +87,9 @@ T *F4MemoryBlock<T, NSLAB>::reserve(int len)
 {
   if (next_free + len > current_slab->block + NSLAB)
     {
-      if (current_slab->next == 0)
+      if (current_slab->next == nullptr)
         {
-          last_slab->next = new slab;
+          last_slab->next = new_slab();
           last_slab = last_slab->next;
           current_slab = last_slab;
         }

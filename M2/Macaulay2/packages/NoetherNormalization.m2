@@ -212,8 +212,7 @@ noetherNormalization(Ideal) := opts -> I -> (
 
 noetherNormalization(QuotientRing) := noetherNormalization(PolynomialRing) := opts -> R -> (
      if not isPolynomialRing ring ideal R then error "expected a quotient of a polynomial ring";
-     noetherNormalization(ideal R, Verbose => opts.Verbose)
-     );
+     noetherNormalization(ideal R, opts))
 
 
 --=========================================================================--
@@ -230,7 +229,15 @@ document {
      used are based on algorithms found in A. Logar's paper: A
      Computational Proof of the Noether Normalization Lemma. In:
      Proceedings 6th AAEEC, Lecture Notes in Computer Science 357,
-     Springer, 1989, 259-273."
+     Springer, 1989, 259-273.",
+     PARA{},
+     "A first example computes a random linear change of coordinates that places an ideal in Noether normal position.",
+     EXAMPLE lines ///
+     R = QQ[x_1..x_4];
+     I = ideal(x_2^2+x_1*x_2+1, x_1*x_2*x_3*x_4+1);
+     (f,J,X) = noetherNormalization I
+     ///,
+     SeeAlso => {noetherNormalization, LimitList, RandomRange}
      }
 
 -----------------------------------------------------------------------------
@@ -249,7 +256,7 @@ document {
      Usage => "(f,J,X) = noetherNormalization C",
      Inputs => {
 	  "C" => null => {"which is either ", ofClass Ideal, " ", TT "I", ", or ", ofClass QuotientRing, " ", TT "R/I", " where ", TT "R", " is ", ofClass PolynomialRing },
-	  LimitList => List => "gives the value which ", TO "BasisElementLimit", "will take",
+	  LimitList => List => {"gives the value which ", TO "BasisElementLimit", " will take."},
 	  RandomRange => ZZ => "if not 0, gives a integer bound for the random coefficients. If 0, then chooses random elements from the coefficient field."
 	  },
      Outputs => {

@@ -1,6 +1,6 @@
 #include "BasicPolyList.hpp"
-#include "matrix.hpp"
-#include "matrix-stream.hpp"
+#include "matrices/matrix.hpp"
+#include "matrices/matrix-stream.hpp"
 #include <sstream>
 const Matrix* toMatrix(const FreeModule *target, const BasicPolyList& Fs)
 {
@@ -40,7 +40,7 @@ void BasicPolyListStreamCollector::appendExponent(VarIndex index, Exponent expon
   mValue[mCurrentPoly].mMonomials[mSizeEntryInMonomial] += 2;
 }
 
-void BasicPolyListStreamCollector::appendTermDone(Coefficient coefficient)
+void BasicPolyListStreamCollector::appendTermDone(const Coefficient& coefficient)
 {
   mValue[mCurrentPoly].mCoefficients[mCurrentTerm] = coefficient;
 }

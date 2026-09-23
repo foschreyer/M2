@@ -3,18 +3,18 @@
 #include "f4/f4-m2-interface.hpp"
 #include "f4/moninfo.hpp"              // for monomial_word, MonomialInfo
 #include "f4/ntuple-monomial.hpp"      // for ntuple_word
-#include "freemod.hpp"                 // for FreeModule
-#include "gbring.hpp"                  // for gbvector, GBRing
+#include "free-modules/freemod.hpp"                 // for FreeModule
+#include "groebner-computations/gbring.hpp"                  // for gbvector, GBRing
 #include "interface/mutable-matrix.h"  // for IM2_MutableMatrix_make
-#include "mat.hpp"                     // for MutableMatrix
-#include "matrix-con.hpp"              // for MatrixConstructor
-#include "matrix.hpp"                  // for Matrix
+#include "basic-mutable-matrices/mat.hpp"                     // for MutableMatrix
+#include "matrices/matrix-con.hpp"              // for MatrixConstructor
+#include "matrices/matrix.hpp"                  // for Matrix
 #include "monoid.hpp"                  // for Monoid
 #include "newdelete.hpp"               // for newarray, newarray_atomic, del...
-#include "polyring.hpp"                // for PolynomialRing
-#include "ring.hpp"                    // for Ring
+#include "rings/polyring.hpp"                // for PolynomialRing
+#include "rings/ring.hpp"                    // for Ring
 #include "style.hpp"                   // for INTSIZE
-#include "VectorArithmetic.hpp"
+#include "basic-rings/vector-arithmetic.hpp"
 
 void F4toM2Interface::from_M2_vec(const VectorArithmetic* VA,
                                   const MonomialInfo *MI,
@@ -55,31 +55,9 @@ void F4toM2Interface::from_M2_vec(const VectorArithmetic* VA,
   delete [] lexp;
 }
 
-void F4toM2Interface::poly_set_degrees(const VectorArithmetic* VA,
-                                       const MonomialInfo *MI,
-                                       const M2_arrayint wts,
-                                       const GBF4Polynomial &f,
-                                       int &deg_result,
-                                       int &alpha)
-{
-  const monomial_word *w = f.monoms;
-  monomial_word leaddeg = MI->monomial_weight(w, wts);
-  monomial_word deg = leaddeg;
-
-  for (int i = 1; i < f.len; i++)
-    {
-      w = w + MI->monomial_size(w);
-      monomial_word degi = MI->monomial_weight(w, wts);
-      if (degi > deg) deg = degi;
-    }
-  alpha = static_cast<int>(deg - leaddeg);
-  deg_result = static_cast<int>(deg);
-}
-
 void F4toM2Interface::from_M2_matrix(const VectorArithmetic* VA,
                                      const MonomialInfo *MI,
                                      const Matrix *m,
-                                     M2_arrayint wts,
                                      gb_array &result_polys)
 {
   const FreeModule *F = m->rows();
@@ -87,7 +65,6 @@ void F4toM2Interface::from_M2_matrix(const VectorArithmetic* VA,
     {
       gbelem *g = new gbelem;
       from_M2_vec(VA, MI, F, m->elem(i), g->f);
-      if (wts != nullptr) poly_set_degrees(VA, MI, wts, g->f, g->deg, g->alpha);
       result_polys.push_back(g);
     }
 }

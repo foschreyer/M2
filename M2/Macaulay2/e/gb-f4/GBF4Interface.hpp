@@ -1,16 +1,18 @@
-#pragma once
+#ifndef M2_GB_F4_GBF4INTERFACE_HPP
+#define M2_GB_F4_GBF4INTERFACE_HPP
 
 #include "BasicPolyList.hpp"
-#include "GBF4Computation.hpp"
-#include "PolynomialList.hpp"
-#include "../e/comp-gb.hpp"
-#include "../matrix-stream.hpp"
+#include "gb-f4/GBF4Computation.hpp"
+#include "gb-f4/PolynomialList.hpp"
+#include "groebner-computations/comp-gb.hpp"
+#include "matrices/matrix-stream.hpp"
 
 class Matrix;
 
 auto createGBF4Interface(const Matrix *inputMatrix,
                          const std::vector<int>& variableWeights, // what is this, do we need it?
-                         int strategy
+                         int strategy,
+                         int numThreads
                          ) -> GBComputation*;
 
 namespace newf4 {
@@ -21,7 +23,8 @@ enum class Strategy { Normal };
 
 auto createGBF4Interface(const Matrix *inputMatrix,
                          const std::vector<int>& variableWeights, // what is this, do we need it?
-                         Strategy strategy // do we need this?
+                         Strategy strategy, // do we need this?
+                         int numThreads
                          ) -> GBComputation*;
 void populateComputation(const Matrix* M, GBF4Computation& C);
   
@@ -43,14 +46,16 @@ public:
   GBF4Interface(const PolynomialRing* originalRing,
                 const Matrix* inputMatrix,
                 const std::vector<int>& variableWeights,
-                Strategy strategy
+                Strategy strategy,
+                int numThreads
                 );
 
   GBF4Interface(const PolynomialRing* originalRing,
                 const FreeModule* freeModule,
                 const BasicPolyList& basicPolyList,
                 const std::vector<int>& variableWeights,
-                Strategy strategy
+                Strategy strategy,
+                int numThreads
                 );
 
   ~GBF4Interface() override;
@@ -65,7 +70,11 @@ public:
 
   const PolynomialRing *get_ring() const override { return mOriginalRing; }
 
-  Computation /* or null */ *set_hilbert_function(const RingElement *h) override { return nullptr; }
+  Computation /* or null */ *set_hilbert_function(const RingElement *h) override
+  {
+    (void) h;
+    return nullptr;
+  }
 
   const Matrix /* or null */ *get_gb() override { return nullptr; }
 
@@ -75,17 +84,37 @@ public:
 
   const Matrix /* or null */ *get_syzygies() override { return nullptr; }
 
-  const Matrix /* or null */ *get_initial(int nparts) override { return nullptr; }
+  const Matrix /* or null */ *get_initial(int nparts) override {
+    (void) nparts;
+    return nullptr;
+  }
 
-  const Matrix /* or null */ *matrix_remainder(const Matrix *m) override { return nullptr; }
+  const Matrix /* or null */ *matrix_remainder(const Matrix *m) override
+  {
+    (void) m;
+    return nullptr;
+  }
 
   M2_bool matrix_lift(const Matrix *m,
                               const Matrix /* or null */ **result_remainder,
-                              const Matrix /* or null */ **result_quotient) override { return false; }
+                              const Matrix /* or null */ **result_quotient) override
+  {
+    (void) m;
+    (void) result_remainder;
+    (void) result_quotient;
+    return false;
+  }
 
-  int contains(const Matrix *m) override { return 0; }
+  int contains(const Matrix *m) override
+  {
+    (void) m;
+    return 0;
+  }
 
-  void text_out(buffer &o) const override { }
+  void text_out(buffer &o) const override
+  {
+    (void) o;
+  }
   /* This displays statistical information, and depends on the
      M2_gbTrace value */
 
@@ -107,6 +136,7 @@ inline const Matrix* toMatrix(const FreeModule *target, const PolynomialList& Fs
 
 } // end namespace newf4
 
+#endif
 // Local Variables:
 // indent-tabs-mode: nil
 // End:

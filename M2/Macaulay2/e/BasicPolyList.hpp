@@ -3,7 +3,8 @@
 // This class really doesn't require any ring.
 // Current restriction: the coefficients must be an integral type. TODO: allow infinite precision integers too.
 //   TODO: how should we handle coefficients which are: GF(p^n), QQ, fraction fields? or even polynomials?
-#pragma once
+#ifndef M2_BASICPOLYLIST_HPP
+#define M2_BASICPOLYLIST_HPP
 
 #include "exceptions.hpp"
 
@@ -13,7 +14,7 @@
 #include <iostream>
 
 #include "BasicPoly.hpp"
-#include "PolynomialStream.hpp"
+#include "unused/PolynomialStream.hpp"
 
 class FreeModule;
 class Matrix;
@@ -25,16 +26,17 @@ long bytesUsed(const BasicPolyList& F);
 class BasicPolyListStreamCollector
 {
 public:
-  using Coefficient = int32_t;
+  using Coefficient = mpz_class;
   using VarIndex = int32_t; // TODO: these must match BasicPoly above.
   using Exponent = int32_t;
   using Component = int32_t;
+  using ModulusType = int32_t;
 private:
   BasicPolyList mValue;
 
   // We store these, as we need to be able to respond to what they are,
   // but we don't use them here at all.
-  Coefficient mModulus;
+  ModulusType mModulus;
   VarIndex mVarCount;
   Component mComCount;
 
@@ -56,7 +58,7 @@ public:
 
   // Fields required for the general stream interface (see mathicgb::mathicgb.h)
   
-  Coefficient modulus() const { return mModulus; }
+  ModulusType modulus() const { return mModulus; }
   VarIndex varCount() const { return mVarCount; }
   Component comCount() const { return mComCount; }
 
@@ -64,7 +66,7 @@ public:
   void appendPolynomialBegin(size_t termCount);
   void appendTermBegin(Component com);
   void appendExponent(VarIndex index, Exponent exponent);
-  void appendTermDone(Coefficient coefficient);
+  void appendTermDone(const Coefficient& coefficient);
   void appendPolynomialDone();
   void idealDone();
 };
@@ -101,6 +103,7 @@ const Matrix* toMatrix(const FreeModule *target, const BasicPolyList& Fs);
 auto basicPolyListFromString(std::vector<std::string> varNames, std::string polyPerLine) -> BasicPolyList;
 auto basicPolyListFromFile(std::vector<std::string> varNames, std::string fileName) -> BasicPolyList;
 
+#endif
 // Local Variables:
 // indent-tabs-mode: nil
 // End:

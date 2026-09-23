@@ -33,14 +33,19 @@ document {
 	  "gens gb f"
 	  },
      PARA {
-	  "If an autoreduced Gröbner basis is desired, replace ", TT "f", " by ", TT "gens forceGB f", " first."
+	  "If an autoreduced Gröbner basis (not just the Groebner basis object) is desired, replace ", TT "forceGB f", " by ", TT "gens forceGB f", "."
 	  },
      Caveat => {"If the columns do not form a Gröbner basis, nonsensical answers may result"},
-     SeeAlso => {"Gröbner bases"}
+     SeeAlso => {"Gröbner bases"},
+     Subnodes => {
+	 TO [forceGB, ChangeMatrix],
+	 TO [forceGB, MinimalMatrix],
+	 TO [forceGB, SyzygyMatrix],
+         },
      }
 document { 
      Key => [forceGB, ChangeMatrix],
-     Headline => "inform Macaulay2 about the change of basis matrix from GB to generators",
+     Headline => "specify the change of basis matrix from a Gröbner basis to the generators of a module",
      Usage => "forceGB(...,ChangeMatrix=>m)",
      Inputs => { "m" => Matrix },
      Consequences => {

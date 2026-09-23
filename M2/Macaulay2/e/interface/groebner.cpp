@@ -6,27 +6,27 @@
 #include <limits>
 #include <sstream>
 
-#include "Eschreyer.hpp"
+#include "computations/Eschreyer.hpp"
 #include "hilb.hpp"
-#include "comp-gb.hpp"
-#include "comp-res.hpp"
-#include "comp-gb-declared.hpp"
+#include "groebner-computations/comp-gb.hpp"
+#include "resolution/comp-res.hpp"
+#include "groebner-computations/comp-gb-declared.hpp"
 #include "text-io.hpp"
-#include "sagbi.hpp"
+#include "groebner-computations/sagbi.hpp"
 #include "exceptions.hpp"
-#include "gb-walk.hpp"
-#include "relem.hpp"
+#include "groebner-computations/gb-walk.hpp"
+#include "ring-elements/ring-element.hpp"
 #include "util.hpp"
-#include "matrix-ncbasis.hpp"
+#include "matrices/matrix-ncbasis.hpp"
 
 #include "M2FreeAlgebra.hpp"
 #include "NCAlgebras/FreeAlgebra.hpp"
 #include "NCAlgebras/NCGroebner.hpp"
 #include "NCAlgebras/NCF4.hpp"
 
-#include "poly.hpp"
+#include "rings/poly.hpp"
 #include "interrupted.hpp"
-#include "schreyer-resolution/res-f4-computation.hpp"
+#include "schreyer-resolutions/res-f4-computation.hpp"
 
 class FreeModule;
 struct MonomialOrdering;
@@ -103,6 +103,7 @@ Computation /* or null */ *IM2_GB_make(
     {
       test_over_RR_or_CC(m->get_ring());
       clear_emit_size();
+      int numThreads = M2_numTBBThreads; // settable from front end.
       return GBComputation::choose_gb(m,
                                       collect_syz,
                                       n_rows_to_keep,
@@ -111,6 +112,7 @@ Computation /* or null */ *IM2_GB_make(
                                       max_degree,
                                       algorithm,
                                       strategy,
+                                      numThreads,
                                       max_reduction_count);
   } catch (const exc::engine_error& e)
     {
@@ -578,6 +580,9 @@ int IM2_Resolution_status(Computation *C,
                           int *complete_up_through_this_degree,
                           int *complete_up_through_this_level)
 {
+  (void) C;
+  (void) complete_up_through_this_degree;
+  (void) complete_up_through_this_level;
 #ifdef DEVELOPMENT
 #warning "IM2_Resolution_status to be written"
 #endif
@@ -591,6 +596,10 @@ enum ComputationStatusCode IM2_Resolution_status_level(
     M2_bool minimize,
     int *complete_up_through_this_degree)
 {
+  (void) C;
+  (void) level;
+  (void) minimize;
+  (void) complete_up_through_this_degree;
 #ifdef DEVELOPMENT
 #warning "IM2_Resolution_status to be written"
 #endif
@@ -685,7 +694,7 @@ Matrix /* or null */ *rawSubduction1(int numparts,
 }
 
 #include "mathicgb.h"
-#include "matrix-stream.hpp"
+#include "matrices/matrix-stream.hpp"
 void rawDisplayMatrixStream(const Matrix *inputMatrix)
 {
   const Ring *R = inputMatrix->get_ring();
@@ -789,6 +798,7 @@ const Matrix *rawMGB(
       if (not P->getCoefficientRing()->isFinitePrimeField())
         {
           ERROR("coefficients for mathic gb computation must be a prime field");
+          return nullptr;
         }
       int charac = static_cast<int>(P->characteristic());
       int nvars = P->n_vars();
@@ -837,7 +847,7 @@ const Matrix *rawMGB(
 
       if (component_is_before_row >= 0)
         configuration.setComponentBefore(component_is_before_row);
-      configuration.setComponentsAscending(component_direction == 1);
+      configuration.setComponentsAscending(component_direction == 1); // BUG: what if descending??
 
 #if 0
     // Debug information
@@ -845,6 +855,8 @@ const Matrix *rawMGB(
     for (size_t i=0; i<mat.size(); i++) printf("%d ", mat[i]);
     printf("\n");
     printf("  Base=%d\n", base_is_revlex);
+    printf("  ComponentBefore=%d\n", component_is_before_row);
+    std::cout << "componentBefore: " << configuration.componentBefore() << std::endl;
 #endif
 
       mgb::GroebnerInputIdealStream input(configuration);
@@ -883,6 +895,7 @@ ConstPolyList matrixToPolyList(const M2FreeAlgebraOrQuotient* A,
                                const Matrix* input)
 {
   ConstPolyList result;
+  (void) A;
   result.reserve(input->n_cols() * input->n_rows());
   for (int i=0; i < input->n_rows(); i++)
     {

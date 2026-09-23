@@ -29,7 +29,6 @@ newPackage(
 	     "journal URI" => "https://msp.org/jsag/",
 	     "article title" => "Computing free bases for projective modules",
 	     "acceptance date" => "2013-09-18",
-	     "repository code URI" => "https://github.com/Macaulay2/M2/blob/master/M2/Macaulay2/packages/QuillenSuslin.m2",
 	     "published article URI" => "https://msp.org/jsag/2013/5-1/p05.xhtml",
 	     "published article DOI" => "10.2140/jsag.2013.5.26",
 	     "published code URI" => "https://msp.org/jsag/2013/5-1/jsag-v5-n1-x05-code.zip",
@@ -38,7 +37,8 @@ newPackage(
 	     "volume number" => "5",
 	     "volume URI" => "https://msp.org/jsag/2013/5-1/"
 	     },
-	PackageImports => {"MinimalPrimes"},
+        PackageExports => {"Complexes"},
+        PackageImports => {"MinimalPrimes"},
     	DebuggingMode => false
     	)
 
@@ -327,7 +327,7 @@ laurentCoeffList(RingElement,RingElement) := (f,var) -> (
 -- entries.
 
 laurentNormalize = method()
-laurentNormalize(Matrix,RingElement) := (f,var) -> (
+laurentNormalize(Matrix,RingElement) := (f',var) -> (
      local D; local degSeqList; local denom; local denomDegSeq;
      local dotList; local E; local Etemp; local f2; local f3; local j;
      local invSubList; local invSubs; local invSubs1; local invSubs2;
@@ -338,15 +338,16 @@ laurentNormalize(Matrix,RingElement) := (f,var) -> (
      local phi; local phiD; 
      
      
-     R = ring f;
-     S = frac((coefficientRing ring f)(monoid [gens ring f]));
+     R = ring f';
+     S = frac((coefficientRing ring f')(monoid [gens ring f']));
    
      phi = map(S,R); 
-     f = phi f;
+     f := phi f';
      var = phi var;
    
      varList = gens S;
      usedVars = unique support f_(0,0); -- Need to use 'unique support' since for a rational function, the 'support' command returns the concatenation of the support of the numerator and the support of the denominator.
+     if #usedVars == 0 then return (map source f', vars R, vars R);
      if not member(var,usedVars) then error "Error: Expected the given variable to be in the support of the first polynomial.";
      if numcols f < 2 then error "Error: Expected the given row to have at least 2 columns.";
      -- The following code creates a list of lists where each interior list is the degree vector of a term of
@@ -467,7 +468,7 @@ maxMinors(Matrix) := M -> (
 
 
 -- Method: trimResolution
--- Input: (Module,ChainComplex) -- projective module over a polynomial ring, given as a cokernel.  Also a free resolution of the module.
+-- Input: (Module,Complex) -- projective module over a polynomial ring, given as a cokernel.  Also a free resolution of the module.
 -- Output: (Matrix,Matrix) -- (Map from R^m -> R^n, Projection map from R^n -> P)
 -- Description:
 -- Given a projective module P which is presented as a cokernel,
@@ -477,7 +478,7 @@ maxMinors(Matrix) := M -> (
 -- "Applications of the Quillen-Suslin Theorem" (pg. 37)
 
 trimResolution = method()
-trimResolution(Module,ChainComplex) := (mp,F) -> (
+trimResolution(Module,Complex) := (mp,F) -> (
      local dd1; local dd2; local dd3; local dd3t; local ident;
      local mp; local p; local proj; local R; local T;
      
@@ -1880,7 +1881,7 @@ qsIsomorphism(Module) := opts -> M -> (
      pruneMap = mp.cache.pruningMap;
      if verbosity >= 3 then print("qsIsomorphism: Constructing a free resolution of the minimal presentation.");
      
-     F = res mp;
+     F = freeResolution mp;
      -- If Macaulay2 already knows that the module is free, then just return the pruning map.
      if length F == 0 then (
 	  if verbosity >= 2 then print "qsIsomorphism: Macaulay2 already knows that this module is free.  Returning the pruning map.";
@@ -1966,7 +1967,15 @@ document {
 	  {"A. Logar and B. Sturmfels.", EM " Algorithms for the Quillen-Suslin theorem.", " J. Algebra, 145(1):231-239, 1992."},
 	  {"A. Fabianska and A. Quadrat." , EM " Applications of the Quillen-Suslin theorem to multidimensional systems theory.", " Grobner bases in control theory and signal processing.", " Radon Series Comp. Appl. Math (3):23-106, 2007."}
 	},
-     
+	     PARA{}, "A first example computes a free basis for the kernel of a unimodular row.",
+	     EXAMPLE {
+		  "R = QQ[x,y]",
+		  "f = matrix{{x^2*y+1,x+y-2,2*x*y}}",
+		  "P = ker f",
+		  "B = computeFreeBasis P",
+		  "image B == P"
+	     },
+	     SeeAlso => { "computeFreeBasis", "qsAlgorithm", "qsIsomorphism", CheckProjective, CheckUnimodular }
      }
 
 document {
@@ -2507,11 +2516,26 @@ document {
 document {
      Key => {CheckProjective},
      Headline => "optional input which gives the user the option to check whether the given module is projective",
+     EXAMPLE {
+	  "R = QQ[x,y]",
+	  "f = matrix{{x^2*y+1,x+y-2,2*x*y}}",
+	  "P = ker f",
+	  "phi = qsIsomorphism(P, CheckProjective => true)",
+	  "isIsomorphism phi"
+     },
+     SeeAlso => { "qsIsomorphism", "computeFreeBasis" }
 }
 
 document {
      Key => {CheckUnimodular},
      Headline => "optional input which gives the user the option to check whether the given matrix is unimodular",
+     EXAMPLE {
+	  "R = QQ[x,y]",
+	  "f = matrix{{x^2*y+1,x+y-2,2*x*y}}",
+	  "U = qsAlgorithm(f, CheckUnimodular => true)",
+	  "f*U"
+     },
+     SeeAlso => { "qsAlgorithm", "horrocks" }
 }
 
 

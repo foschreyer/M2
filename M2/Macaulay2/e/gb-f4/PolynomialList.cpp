@@ -1,11 +1,12 @@
-#include "PolynomialList.hpp"
-#include "matrix.hpp"
-#include "matrix-stream.hpp"
+#include "gb-f4/PolynomialList.hpp"
+#include "matrices/matrix.hpp"
+#include "matrices/matrix-stream.hpp"
 
 namespace newf4 {
 
 void PolynomialListStreamCollector::idealBegin(size_t polyCount)
 {
+  (void) polyCount;
   mCurrentPoly = -1;
 }
 
@@ -44,7 +45,7 @@ void PolynomialListStreamCollector::appendTermDone(Coefficient coefficient)
 
 void PolynomialListStreamCollector::appendPolynomialDone()
 {
-  mValue[mCurrentPoly].mCoefficients = mValue.vectorArithmetic().elementArrayFromContainerOfLongs(mCoefficients);
+  mValue[mCurrentPoly].mCoefficients = mValue.vectorArithmetic().elementArrayFromContainerOf_mpz_class(mCoefficients);
   if (mCurrentTerm != mValue[mCurrentPoly].mComponents.size() - 1)
     throw exc::engine_error("internal error: building PolyList from stream has incorrect number of terms in a polynomial");
 }

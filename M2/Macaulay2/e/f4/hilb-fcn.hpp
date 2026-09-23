@@ -1,10 +1,10 @@
 /* Copyright 2010-2021, Michael E. Stillman */
 
-#ifndef _hilb_fcn_h_
-#define _hilb_fcn_h_
+#ifndef M2_F4_HILB_FCN_H_
+#define M2_F4_HILB_FCN_H_
 
 #include "newdelete.hpp"  // for VECTOR
-#include "ringelem.hpp"   // for vec
+#include "rings/ringelem.hpp"   // for vec
 
 class FreeModule;
 class Matrix;
@@ -12,7 +12,7 @@ class MatrixConstructor;
 class PolynomialRing;
 class RingElement;
 
-class HilbertController
+class HilbertController : public our_new_delete
 {
  public:
   HilbertController(const FreeModule *F0, const RingElement *hf);

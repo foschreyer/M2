@@ -1,20 +1,25 @@
 // Current restriction: the coefficients must be an integral type.
 //   TODO: allow infinite precision integers too.
 //   TODO: how should we handle coefficients which are: GF(p^n), QQ, fraction fields? or even polynomials?
-#pragma once
+#ifndef M2_BASICPOLY_HPP
+#define M2_BASICPOLY_HPP
 
 #include "exceptions.hpp"
 #include <vector>
 #include <iosfwd>
 #include <string>
 #include <unordered_map>
-  
+#include <gmpxx.h>
+
 class BasicPoly
 {
 public:
-  std::vector<int> mCoefficients;
+  std::vector<mpz_class> mCoefficients;
   std::vector<int> mComponents; // if zero length: all components are 0.
   std::vector<int> mMonomials; // a concatenated list of varpower monomials.  Each first entry is its length.
+
+  void clear(); // resets all data to represent the zero polynomial
+  ~BasicPoly() { clear(); }
   
   size_t termCount() const { return mCoefficients.size(); } 
   void debug_display(std::ostream& o) const;
@@ -90,6 +95,7 @@ void parseBasicPoly(const std::string_view& str, const IdentifierHash& idenHash,
 // TODO: we want an iterator type here.
 // TODO: 
 // 
+#endif
 
 // Local Variables:
 // indent-tabs-mode: nil

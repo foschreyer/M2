@@ -1,15 +1,14 @@
 /* Copyright 2005 - 2021, Michael E. Stillman */
 
-#ifndef _F4Computation_h_
-#define _F4Computation_h_
+#ifndef M2_F4_F4COMPUTATION_H_
+#define M2_F4_F4COMPUTATION_H_
 
-#include "comp-gb.hpp"              // for GBComputation
-#include "engine-exports.h"         // for M2_bool, M2_arrayint
+#include "groebner-computations/comp-gb.hpp"              // for GBComputation
+#include "interface/m2-types.h"     // for M2_bool, M2_arrayint
 #include "f4/f4.hpp"                // for F4GB
 #include "interface/computation.h"  // for ComputationStatusCode
-#include "polyring.hpp"             // for PolynomialRing
+#include "rings/polyring.hpp"             // for PolynomialRing
 class Computation;
-class F4Mem;
 class FreeModule;
 class Matrix;
 class MonomialInfo;
@@ -29,18 +28,17 @@ class F4Computation : public GBComputation
                                    // Also determines degrees of elements in F.
   const VectorArithmetic* mVectorArithmetic;
   MonomialInfo *mMonoid;
-  F4Mem *mMemoryBlock;
   F4GB *mF4GB;
  public:
   F4Computation(const VectorArithmetic* VA,
-                F4Mem *Mem,
                 const Matrix *m,
                 M2_bool collect_syz,
                 int n_rows_to_keep,
                 M2_arrayint gb_weights,
                 int strategy,
                 M2_bool use_max_degree,
-                int max_degree);
+                int max_degree,
+                int numThreads);
 
   ~F4Computation() override;
 
@@ -90,7 +88,8 @@ GBComputation *createF4GB(const Matrix *m,
                           M2_arrayint gb_weights,
                           int strategy,
                           M2_bool use_max_degree,
-                          int max_degree);
+                          int max_degree,
+                          int numThreads);
 
 #endif
 
