@@ -278,7 +278,7 @@ beginDocumentation()
 
 document {
   Key => HilbertSchemeStrata,
-  Headline => "Computation of strata of an Hilbert scheme",
+  Headline => "Computation of strata of a Hilbert scheme; used in Schreyer's Introduction to Algebraic Geometry",
   "This package contains the implementation of an Groebner basis approach 
   to the Hilbert scheme. The basic set-up is to compute an unfolding of the 
   generators of an ideal corresponding to a point in the Hilbert scheme, and then to compute the 
