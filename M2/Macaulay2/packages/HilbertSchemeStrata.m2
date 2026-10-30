@@ -22,7 +22,7 @@ newPackage(
                   Email => "schreyer@math.uni-sb.de", 
                   HomePage => "https://www.math.uni-sb.de/ag/schreyer/"}
 	      },
-        Headline => "Computation of strata of a Hilbert Scheme",
+        Headline => "Computation of strata of a Hilbert scheme; used in Schreyer's Introduction to Algebraic Geometry",
         Keywords => {"Projective Algebraic Geometry","Deformation Theory"}
         )
 
